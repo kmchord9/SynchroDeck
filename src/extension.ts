@@ -1,9 +1,39 @@
 import * as vscode from 'vscode';
+import * as path from 'path';
+import { exportPdf } from './pdf';
 
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('synchrodeck.openPreview', () => {
       SynchroDeckPanel.createOrShow(context.extensionUri);
+    }),
+
+    vscode.commands.registerCommand('synchrodeck.exportPdf', async () => {
+      const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
+      if (!workspaceFolder) {
+        vscode.window.showErrorMessage('ワークスペースが開かれていません');
+        return;
+      }
+
+      const slideDir = path.join(workspaceFolder.uri.fsPath, 'slides');
+      const defaultUri = vscode.Uri.file(
+        path.join(workspaceFolder.uri.fsPath, 'output.pdf')
+      );
+      const outputUri = await vscode.window.showSaveDialog({
+        defaultUri,
+        filters: { PDF: ['pdf'] },
+      });
+      if (!outputUri) {
+        return;
+      }
+
+      await vscode.window.withProgress(
+        { location: vscode.ProgressLocation.Notification, title: 'SynchroDeck: PDF出力中...' },
+        async () => {
+          await exportPdf(slideDir, outputUri.fsPath);
+        }
+      );
+      vscode.window.showInformationMessage(`PDF出力完了: ${outputUri.fsPath}`);
     }),
 
     // SVGファイルが編集されたらWebviewを更新

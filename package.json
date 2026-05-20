@@ -6,7 +6,9 @@
   "engines": {
     "vscode": "^1.90.0"
   },
-  "categories": ["Other"],
+  "categories": [
+    "Other"
+  ],
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
@@ -14,14 +16,18 @@
       {
         "command": "synchrodeck.openPreview",
         "title": "SynchroDeck: Open Preview"
+      },
+      {
+        "command": "synchrodeck.exportPdf",
+        "title": "SynchroDeck: Export PDF"
       }
     ]
   },
   "scripts": {
     "build": "npm run build:ext && npm run build:webview",
-    "build:ext": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --sourcemap",
+    "build:ext": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --external:puppeteer --format=cjs --platform=node --sourcemap",
     "build:webview": "vite build",
-    "watch:ext": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --sourcemap --watch",
+    "watch:ext": "esbuild src/extension.ts --bundle --outfile=out/extension.js --external:vscode --external:puppeteer --format=cjs --platform=node --sourcemap --watch",
     "watch:webview": "vite build --watch",
     "vscode:prepublish": "npm run build"
   },
@@ -36,6 +42,7 @@
     "vite": "^5.0.0"
   },
   "dependencies": {
+    "puppeteer": "^25.0.4",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   }
