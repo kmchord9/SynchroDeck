@@ -4,11 +4,29 @@ export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('synchrodeck.openPreview', () => {
       SynchroDeckPanel.createOrShow(context.extensionUri);
+    }),
+
+    // SVGファイルが編集されたらWebviewを更新
+    vscode.workspace.onDidChangeTextDocument((e) => {
+      if (SynchroDeckPanel.currentPanel && isSvg(e.document)) {
+        SynchroDeckPanel.currentPanel.sendSlide(e.document.getText());
+      }
+    }),
+
+    // アクティブエディタが切り替わったらWebviewを更新
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      if (SynchroDeckPanel.currentPanel && editor && isSvg(editor.document)) {
+        SynchroDeckPanel.currentPanel.sendSlide(editor.document.getText());
+      }
     })
   );
 }
 
 export function deactivate() {}
+
+function isSvg(doc: vscode.TextDocument): boolean {
+  return doc.languageId === 'xml' || doc.fileName.endsWith('.svg');
+}
 
 class SynchroDeckPanel {
   static currentPanel: SynchroDeckPanel | undefined;
@@ -18,6 +36,11 @@ class SynchroDeckPanel {
   static createOrShow(extensionUri: vscode.Uri) {
     if (SynchroDeckPanel.currentPanel) {
       SynchroDeckPanel.currentPanel._panel.reveal(vscode.ViewColumn.Beside);
+      // パネルを再表示した時点のアクティブSVGを送信
+      const editor = vscode.window.activeTextEditor;
+      if (editor && isSvg(editor.document)) {
+        SynchroDeckPanel.currentPanel.sendSlide(editor.document.getText());
+      }
       return;
     }
     const panel = vscode.window.createWebviewPanel(
@@ -39,6 +62,17 @@ class SynchroDeckPanel {
     this._panel.onDidDispose(() => {
       SynchroDeckPanel.currentPanel = undefined;
     });
+
+    // 開いた直後に現在のSVGを表示
+    const editor = vscode.window.activeTextEditor;
+    if (editor && isSvg(editor.document)) {
+      // Webviewの初期化を待ってから送信
+      setTimeout(() => this.sendSlide(editor.document.getText()), 100);
+    }
+  }
+
+  sendSlide(svgContent: string) {
+    this._panel.webview.postMessage({ type: 'update', svgContent });
   }
 
   private _buildHtml(): string {
