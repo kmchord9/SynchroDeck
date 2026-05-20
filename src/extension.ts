@@ -2,6 +2,9 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { exportPdf } from './pdf';
 
+// Webviewからの書き戻しによるループを防ぐフラグ
+let applyingEdit = false;
+
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.commands.registerCommand('synchrodeck.openPreview', () => {
@@ -36,8 +39,9 @@ export function activate(context: vscode.ExtensionContext) {
       vscode.window.showInformationMessage(`PDF出力完了: ${outputUri.fsPath}`);
     }),
 
-    // SVGファイルが編集されたらWebviewを更新
+    // SVGファイルが編集されたらWebviewを更新（Webview起因の変更は無視）
     vscode.workspace.onDidChangeTextDocument((e) => {
+      if (applyingEdit) { return; }
       if (SynchroDeckPanel.currentPanel && isSvg(e.document)) {
         SynchroDeckPanel.currentPanel.sendSlide(e.document.getText());
       }
@@ -66,7 +70,6 @@ class SynchroDeckPanel {
   static createOrShow(extensionUri: vscode.Uri) {
     if (SynchroDeckPanel.currentPanel) {
       SynchroDeckPanel.currentPanel._panel.reveal(vscode.ViewColumn.Beside);
-      // パネルを再表示した時点のアクティブSVGを送信
       const editor = vscode.window.activeTextEditor;
       if (editor && isSvg(editor.document)) {
         SynchroDeckPanel.currentPanel.sendSlide(editor.document.getText());
@@ -93,10 +96,32 @@ class SynchroDeckPanel {
       SynchroDeckPanel.currentPanel = undefined;
     });
 
-    // 開いた直後に現在のSVGを表示
+    // Webviewからの編集を受信してSVGファイルに書き戻す
+    this._panel.webview.onDidReceiveMessage(async (msg) => {
+      if (msg.type !== 'applyEdit') { return; }
+      const editor = vscode.window.activeTextEditor;
+      if (!editor || !isSvg(editor.document)) { return; }
+
+      applyingEdit = true;
+      try {
+        const edit = new vscode.WorkspaceEdit();
+        edit.replace(
+          editor.document.uri,
+          new vscode.Range(
+            editor.document.positionAt(0),
+            editor.document.positionAt(editor.document.getText().length)
+          ),
+          msg.svgContent
+        );
+        await vscode.workspace.applyEdit(edit);
+      } finally {
+        applyingEdit = false;
+      }
+    });
+
+    // 開いた直後に現在のSVGを送信
     const editor = vscode.window.activeTextEditor;
     if (editor && isSvg(editor.document)) {
-      // Webviewの初期化を待ってから送信
       setTimeout(() => this.sendSlide(editor.document.getText()), 100);
     }
   }
