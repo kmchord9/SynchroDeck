@@ -357,7 +357,11 @@ export default function App() {
   return (
     <div
       style={{ width: '100vw', height: '100vh', display: 'grid', placeItems: 'center', background: '#1e1e1e', overflow: 'hidden', position: 'relative' }}
-      onClick={onBgClick}
+      onClick={e => {
+        // foreignObject 内のクリック（テキスト編集中のカーソル操作など）は無視する
+        if ((e.target as Element).closest?.('foreignObject')) return;
+        onBgClick();
+      }}
     >
       {/* Slide preview */}
       <div

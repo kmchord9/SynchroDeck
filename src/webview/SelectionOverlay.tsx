@@ -47,11 +47,14 @@ export const SelectionOverlay = forwardRef<HTMLDivElement, Props>(
           border: `2px dashed ${color}`,
           cursor: isEditing ? 'text' : 'move',
           boxSizing: 'border-box',
-          pointerEvents: 'auto',
+          // 編集中はクリックを下のcontenteditable divに透過させる
+          pointerEvents: isEditing ? 'none' : 'auto',
           zIndex: 1000,
         }}
         onMouseDown={!isEditing ? onMoveStart : undefined}
         onDoubleClick={onDblClick}
+        // 選択中クリックが親divに伝播して deselect されるのを防ぐ
+        onClick={e => e.stopPropagation()}
       >
         {canResize && !isEditing && HANDLES.map(h => (
           <div
