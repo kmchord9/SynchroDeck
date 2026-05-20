@@ -437,7 +437,15 @@ export default function App() {
                     <div style={{ fontSize: 13, color: isSel ? '#e2e8f0' : '#94a3b8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{info.label}</div>
                     <div style={{ fontSize: 10, color: '#334155', fontFamily: 'monospace' }}>{info.type}</div>
                   </div>
-                  {isSel && <span style={{ color: '#6366f1', fontSize: 12, flexShrink: 0 }}>●</span>}
+                  {/* foreignObject には常時✏ボタンを表示 */}
+                  {info.type === 'foreignObject' && (
+                    <button
+                      title="テキストを編集"
+                      onClick={e => { e.stopPropagation(); startTextEdit(info); }}
+                      style={{ flexShrink: 0, background: 'none', border: '1px solid #334155', borderRadius: 4, color: '#6366f1', fontSize: 11, cursor: 'pointer', padding: '2px 6px', lineHeight: 1.4 }}
+                    >✏</button>
+                  )}
+                  {isSel && info.type !== 'foreignObject' && <span style={{ color: '#6366f1', fontSize: 12, flexShrink: 0 }}>●</span>}
                 </div>
               );
             })}
