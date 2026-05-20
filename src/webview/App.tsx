@@ -238,14 +238,22 @@ export default function App() {
     if (svgEl) vscode.postMessage({ type: 'applyEdit', svgContent: serialize(svgEl, dims.current) });
   }
 
-  function startTextEdit() {
-    const sel = selectedRef.current;
-    if (!sel || sel.type !== 'foreignObject') return;
-    const div = sel.el.querySelector('div') as HTMLElement | null;
+  // infoOverride: コンテナのdblclickから直接渡す場合（setSelected完了を待たない）
+  function startTextEdit(infoOverride?: ElementInfo) {
+    const target = infoOverride ?? selectedRef.current;
+    if (!target || target.type !== 'foreignObject') return;
+
+    // まだ選択されていない場合は選択状態にする
+    if (infoOverride && selectedRef.current?.el !== infoOverride.el) {
+      const sel = { ...infoOverride, bounds: infoOverride.el.getBoundingClientRect() };
+      setSelected(sel);
+      selectedRef.current = sel; // 同期的に更新してfocusが正しく動くようにする
+    }
+
+    const div = target.el.querySelector('div') as HTMLElement | null;
     if (!div) return;
     div.contentEditable = 'true';
     div.focus();
-    // Move caret to end
     const range = document.createRange();
     range.selectNodeContents(div);
     range.collapse(false);
@@ -368,6 +376,14 @@ export default function App() {
         ref={containerRef}
         style={{ width: 'min(100vw, calc(100vh * 16 / 9))', aspectRatio: '16 / 9', overflow: 'hidden' }}
         dangerouslySetInnerHTML={{ __html: svgContent }}
+        onDoubleClick={e => {
+          // foreignObject 内コンテンツからバブルアップする dblclick を確実に捕捉
+          const fo = (e.target as Element).closest?.('foreignObject') as SVGElement | null;
+          if (!fo) return;
+          e.stopPropagation();
+          const info = elements.find(i => i.el === fo);
+          if (info) startTextEdit(info);
+        }}
       />
 
       {/* Selection overlay */}
@@ -426,9 +442,17 @@ export default function App() {
               );
             })}
 
-            {/* Status hint */}
-            <div style={{ padding: '6px 12px', fontSize: 11, borderTop: elements.length ? '1px solid #1e293b' : 'none', color: isEditing ? '#34d399' : '#334155' }}>
-              {isEditing ? 'Esc または外側クリックで確定' : selected?.type === 'foreignObject' ? 'ダブルクリックでテキスト編集' : '要素を選択してください'}
+            {/* テキスト編集ボタン / 状態ヒント */}
+            {selected?.type === 'foreignObject' && !isEditing && (
+              <button
+                onClick={() => startTextEdit()}
+                style={{ width: '100%', padding: '8px 12px', background: '#1e293b', border: 'none', borderTop: '1px solid #334155', color: '#6366f1', fontSize: 12, cursor: 'pointer', textAlign: 'left' }}
+              >
+                ✏️ テキストを編集
+              </button>
+            )}
+            <div style={{ padding: '6px 12px', fontSize: 11, borderTop: '1px solid #1e293b', color: isEditing ? '#34d399' : '#334155' }}>
+              {isEditing ? 'Esc または外側クリックで確定' : selected ? 'ダブルクリックまたはボタンで編集' : '要素を選択してください'}
             </div>
           </div>
         )}
