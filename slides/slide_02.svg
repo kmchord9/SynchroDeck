@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 1920 1080" width="1920" height="1080">
+
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="#0f172a"/>
+
+  <!-- Header bar -->
+  <rect x="0" y="0" width="1920" height="140" fill="#1e293b"/>
+  <rect x="0" y="136" width="1920" height="4" fill="#6366f1"/>
+
+  <!-- HTML layout via foreignObject -->
+  <foreignObject x="0" y="0" width="1920" height="1080">
+    <div xmlns="http://www.w3.org/1999/xhtml" style="
+      width: 1920px;
+      height: 1080px;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', 'Noto Sans JP', sans-serif;
+      color: #f1f5f9;
+    ">
+      <!-- Header: slide title -->
+      <div style="
+        height: 140px;
+        display: flex;
+        align-items: center;
+        padding: 0 80px;
+        flex-shrink: 0;
+      ">
+        <h2 style="
+          font-size: 52px;
+          font-weight: 600;
+          margin: 0;
+          color: #e2e8f0;
+        ">課題と解決アプローチ</h2>
+      </div>
+
+      <!-- Body: two-column layout -->
+      <div style="
+        flex: 1;
+        display: flex;
+        gap: 0;
+        padding: 60px 80px 60px 80px;
+        box-sizing: border-box;
+        overflow: hidden;
+      ">
+        <!-- Left column: Problem -->
+        <div style="
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 32px;
+          padding-right: 60px;
+          border-right: 2px solid #1e293b;
+        ">
+          <p style="
+            font-size: 30px;
+            font-weight: 600;
+            color: #f87171;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+          ">課題</p>
+
+          <!-- Bullet items: adding more items here will NOT break layout -->
+          <div style="display: flex; flex-direction: column; gap: 28px;">
+            <div style="display: flex; gap: 20px; align-items: flex-start;">
+              <span style="color: #f87171; font-size: 28px; flex-shrink: 0; margin-top: 2px;">▸</span>
+              <p style="font-size: 34px; line-height: 1.5; margin: 0; color: #cbd5e1;">
+                AIが絶対座標で要素配置すると、テキスト追加で<strong style="color: #f1f5f9;">レイアウト崩壊</strong>
+              </p>
+            </div>
+            <div style="display: flex; gap: 20px; align-items: flex-start;">
+              <span style="color: #f87171; font-size: 28px; flex-shrink: 0; margin-top: 2px;">▸</span>
+              <p style="font-size: 34px; line-height: 1.5; margin: 0; color: #cbd5e1;">
+                コード直接編集は直感的でなく、ミスが起きやすい
+              </p>
+            </div>
+            <div style="display: flex; gap: 20px; align-items: flex-start;">
+              <span style="color: #f87171; font-size: 28px; flex-shrink: 0; margin-top: 2px;">▸</span>
+              <p style="font-size: 34px; line-height: 1.5; margin: 0; color: #cbd5e1;">
+                SVG→PDF変換でフォントズレ・文字切れが頻発
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column: Solution -->
+        <div style="
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 32px;
+          padding-left: 60px;
+        ">
+          <p style="
+            font-size: 30px;
+            font-weight: 600;
+            color: #34d399;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+          ">解決策</p>
+
+          <div style="display: flex; flex-direction: column; gap: 28px;">
+            <div style="display: flex; gap: 20px; align-items: flex-start;">
+              <span style="color: #34d399; font-size: 28px; flex-shrink: 0; margin-top: 2px;">✓</span>
+              <p style="font-size: 34px; line-height: 1.5; margin: 0; color: #cbd5e1;">
+                <strong style="color: #f1f5f9;">foreignObject + Flexbox</strong> で自動改行・可変レイアウト
+              </p>
+            </div>
+            <div style="display: flex; gap: 20px; align-items: flex-start;">
+              <span style="color: #34d399; font-size: 28px; flex-shrink: 0; margin-top: 2px;">✓</span>
+              <p style="font-size: 34px; line-height: 1.5; margin: 0; color: #cbd5e1;">
+                Webview でドラッグ&amp;カラーピッカーによるビジュアル編集、コードに自動同期
+              </p>
+            </div>
+            <div style="display: flex; gap: 20px; align-items: flex-start;">
+              <span style="color: #34d399; font-size: 28px; flex-shrink: 0; margin-top: 2px;">✓</span>
+              <p style="font-size: 34px; line-height: 1.5; margin: 0; color: #cbd5e1;">
+                Puppeteer によるChromiumレンダリングで<strong style="color: #f1f5f9;">WYSIWYG PDF出力</strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </foreignObject>
+</svg>
