@@ -47,9 +47,10 @@ export function activate(context: vscode.ExtensionContext) {
       }
     }),
 
-    // アクティブエディタが切り替わったらWebviewを更新
+    // アクティブエディタが切り替わったらWebviewを更新＋書き戻し先URIを更新
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (SynchroDeckPanel.currentPanel && editor && isSvg(editor.document)) {
+        SynchroDeckPanel.currentPanel.setActiveDoc(editor.document.uri);
         SynchroDeckPanel.currentPanel.sendSlide(editor.document.getText());
       }
     })
@@ -66,12 +67,19 @@ class SynchroDeckPanel {
   static currentPanel: SynchroDeckPanel | undefined;
   private readonly _panel: vscode.WebviewPanel;
   private readonly _extensionUri: vscode.Uri;
+  // Webviewがフォーカスを持つとactiveTextEditorがundefinedになるため、最後のSVG URIを保持
+  private _activeDocUri: vscode.Uri | undefined;
+
+  setActiveDoc(uri: vscode.Uri) {
+    this._activeDocUri = uri;
+  }
 
   static createOrShow(extensionUri: vscode.Uri) {
     if (SynchroDeckPanel.currentPanel) {
       SynchroDeckPanel.currentPanel._panel.reveal(vscode.ViewColumn.Beside);
       const editor = vscode.window.activeTextEditor;
       if (editor && isSvg(editor.document)) {
+        SynchroDeckPanel.currentPanel.setActiveDoc(editor.document.uri);
         SynchroDeckPanel.currentPanel.sendSlide(editor.document.getText());
       }
       return;
@@ -99,21 +107,22 @@ class SynchroDeckPanel {
     // Webviewからの編集を受信してSVGファイルに書き戻す
     this._panel.webview.onDidReceiveMessage(async (msg) => {
       if (msg.type !== 'applyEdit') { return; }
-      const editor = vscode.window.activeTextEditor;
-      if (!editor || !isSvg(editor.document)) { return; }
+      // Webviewがフォーカス中はactiveTextEditorがundefinedになるため、保持済みのURIを使う
+      const uri = this._activeDocUri;
+      if (!uri) { return; }
+      const doc = vscode.workspace.textDocuments.find(d => d.uri.toString() === uri.toString());
+      if (!doc || !isSvg(doc)) { return; }
 
       applyingEdit = true;
       try {
         const edit = new vscode.WorkspaceEdit();
         edit.replace(
-          editor.document.uri,
-          new vscode.Range(
-            editor.document.positionAt(0),
-            editor.document.positionAt(editor.document.getText().length)
-          ),
+          doc.uri,
+          new vscode.Range(doc.positionAt(0), doc.positionAt(doc.getText().length)),
           msg.svgContent
         );
         await vscode.workspace.applyEdit(edit);
+        await doc.save();
       } finally {
         applyingEdit = false;
       }
@@ -122,6 +131,7 @@ class SynchroDeckPanel {
     // 開いた直後に現在のSVGを送信
     const editor = vscode.window.activeTextEditor;
     if (editor && isSvg(editor.document)) {
+      this._activeDocUri = editor.document.uri;
       setTimeout(() => this.sendSlide(editor.document.getText()), 100);
     }
   }
