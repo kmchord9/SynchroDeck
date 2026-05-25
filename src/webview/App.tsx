@@ -165,7 +165,7 @@ export default function App() {
 
     svg.querySelectorAll(':scope > rect, :scope > circle, :scope > foreignObject').forEach(rawEl => {
       const el   = rawEl as SVGElement;
-      const type = el.tagName.toLowerCase() as ElementType;
+      const type = el.tagName as ElementType; // SVG tagNames preserve spec case: rect/circle/foreignObject
       counts[type] = (counts[type] ?? 0) + 1;
       const label = makeLabel(el, type, counts[type]);
 
